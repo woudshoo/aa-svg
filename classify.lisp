@@ -5,7 +5,8 @@
 (defparameter *horizontal-run-chars* "-+'/`\\<>")
 (defparameter *vertical-run-chars* "|+'/`\\v^")
 (defparameter *break-point-chars* "+'/`\\")
-
+(defparameter *arrow-heads-end* "v>")
+(defparameter *arrow-heads-start* "<^")
 ;; Every character is classifed with one or more characters:
 ;;
 ;;  t -- text
@@ -56,6 +57,7 @@
   (find (char-at-point *current-image* (add-points *current-pos* delta)) charset))
 
 (defun is-alphanumeric (&optional (delta *here*))
+  #+nil (not (is-space delta))
   (alphanumericp (char-at-point *current-image* (add-points *current-pos* delta))))
 
 (defun is-space (&optional (delta *here*))
@@ -83,7 +85,18 @@
 ;;             (and (one-of *horizontal-run-chars* ...
 
 (defparameter *classifiers*
-  (list (classifier #\- (and (one-of *horizontal-run-chars*)
+  (list (classifier #\t (or (is-alphanumeric)
+			    (and (one-of " -")
+				 (is-alphanumeric *right*)
+				 (is-alphanumeric *left*))
+			    (and (one-of "'")
+				 (or
+				  (is-alphanumeric *left*)
+				  (is-alphanumeric *right*)))
+			    (and (one-of "-")
+				 (is-space *right*)
+				 (is-space *left*))))
+	(classifier #\- (and (one-of *horizontal-run-chars*)
 			     (or (one-of *horizontal-run-chars* *left*)
 				 (one-of *horizontal-run-chars* *right*))))
 	(classifier #\| (and (one-of *vertical-run-chars*)
@@ -101,7 +114,7 @@
 			     (not (one-of *vertical-run-chars* *up*))))
 	(classifier #\/ (and (one-of *break-point-chars*)
 			     (one-of *vertical-run-chars* *down*)
-			    (one-of *horizontal-run-chars* *right*)
+			     (one-of *horizontal-run-chars* *right*)
 			     (not (one-of *horizontal-run-chars* *left*))
 			     (not (one-of *vertical-run-chars* *up*))))
 	(classifier #\, (and (one-of *break-point-chars*)
@@ -129,18 +142,8 @@
 			     (one-of *horizontal-run-chars* *left*)
 			     (one-of *horizontal-run-chars* *right*)
 			     (one-of *vertical-run-chars* *down*)))
-
-	(classifier #\t (or (is-alphanumeric)
-			    (and (one-of " -")
-				 (is-alphanumeric *right*)
-				 (is-alphanumeric *left*))
-			    (and (one-of "'")
-				 (or
-				  (is-alphanumeric *left*)
-				  (is-alphanumeric *right*)))
-			    (and (one-of "-")
-				 (is-space *right*)
-				 (is-space *left*))))))
+	(classifier #\> (one-of *arrow-heads-end*))
+	(classifier #\< (one-of *arrow-heads-start*))))
 
 (defmethod classify ((image image) (point point))
   (loop 

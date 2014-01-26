@@ -6,10 +6,10 @@
 
 
 (defmethod find-text (image)
-  (find-simple-x-runs image (lambda (point image)
-			      (has-class-at-point image point #\t))
-		      'text))
-
+  (find-simple-runs image *right*  
+		    (lambda (point image)
+		      (has-class-at-point image point #\t)) 
+		    'text))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SVG 

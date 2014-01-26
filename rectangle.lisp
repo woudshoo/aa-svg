@@ -34,7 +34,8 @@ the result contains n(n-1)/2 elements."
     result))
     
 (defun possible-rectangles (points)
-  "Returns a list of possible rectangles, each rectangle indicated by the four points of its corners"
+  "Returns a list of possible rectangles, each rectangle indicated by the four points of its corners.
+Note that this can result in lots of rectangles, O (n^2) with n the number of points."
   (let ((pairs (make-pairs points))
 	(result (fset:empty-set)))
     (fset:do-set (pair pairs)
@@ -44,6 +45,26 @@ the result contains n(n-1)/2 elements."
 	  (fset:adjoinf result (fset:union pair opposite-pair)))))
     result))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Idea for more meaningful rectangles
+;;;
+;;; Make a partial order on the rectangles in one of the following ways:
+;;;
+;;;  1 - <=C   R <=C S if R is contained in S.
+;;;  2 - <=D   R <=D S if R is contained in S and all the corners of R are on the edges of S.
+;;;
+;;; Now a possible algorithm for finding interesting rectangles is:
+;;;   - Find all rectangles
+;;;   - Only keep the minimal and maximal rectangles in a partial order.
+;;;
+;;; If we use <=D this is probably what we want.
+
+
+(defun possible-rectangles (runs)
+  "Return a list of possible rectangles indicated by the RUNS.
+A rectangle R is possible in RUNS if there are 4 runs such that
+4 subsets of the 4 different runs are the sides of R.")
 
 
 

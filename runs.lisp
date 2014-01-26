@@ -1,4 +1,3 @@
-
 (in-package #:aa-svg)
 
 
@@ -60,7 +59,9 @@ Note:  That the coordinates of a run are inclusive, e.g.
 (defmethod text ((run run))
   "Returns the text content of RUN in IMAGE.
 Basically all characters in the original image which are contained in the
-interval specified by RUN."
+interval specified by RUN. 
+
+NOTE: Currently this only works for horizontal runs."
   (coerce  (loop
 	      :with image = (image run)
 	      :with y = (point-y (point-a run))
@@ -68,40 +69,40 @@ interval specified by RUN."
 	      :collect (char-at-point image (make-point :x x :y y)))
 	   'string))
 
-#+nil (defmethod end-points ((run run) (image t))
-  "The set of end points of RUN."
-  (fset:with (fset:set (point-a run)) (point-b run)))
-
 ;;;;;;;;;;;;
 
-(defun find-simple-x-runs (image classifier class)
-  "Temporary abstraction, find in IMAGE horizontal runs.  
+
+(defun find-simple-runs (image direction classifier class)
+  "Temporary abstraction, find in IMAGE runs in the direction DIRECTION.  
 A consists of characters recognized by CLASSIFIER.  
 The resulting run class is of class CLASS.
 
 CLASSIFIER is a function taking two arguments, 
 a location and the image.
 
-TODO: Simplify to use increments and check wrapping."
-  (let (result)
-    (loop :for y :from 0 :below (image-height image)
-       :for start-point = nil :do
-       (loop :for x :from 0 :below (image-width image)
-	  :for prev-point = point
-	  :for point = (make-point :x x :y y)
-	  :for has-right-class = (funcall classifier point image)
-	  :do
-	  (if has-right-class
-	      (unless start-point
-		(setf start-point point))
-	      (when start-point
-		(push (make-instance class
-				     :a start-point
-				     :b prev-point
-				     :image image) result)
-		(setf start-point nil)))))
-    result))
+TODO: Simplify"
+  (let (result start-point prev-point)
+    (labels ((make-when-needed ()
+		 (when start-point
+		   (push (make-instance class
+					:a start-point
+					:b prev-point
+					:image image) result)
+		   (setf start-point nil))))
+      (loop 
+	 :for point = *here* :then  (adjust-point (add-points point direction) 
+						  (image-size image))
 
+	 :while (not (past-end-of-image image point))
+	 :finally (make-when-needed)
+	 :for has-right-class = (funcall classifier point image)
+	 :do
+	 (if has-right-class
+	     (unless start-point
+	       (setf start-point point))
+	     (make-when-needed))
+	 (setf prev-point (and (not (past-end-of-row/line image point)) point))))
+    result))
 
 (defun find-runs (image char-set direction)
   "Return all runs in IMAGE consisting of characters in CHAR-SET.
@@ -113,36 +114,13 @@ The DIRECTION parameter indicates this and it should either by :x or :y
 - DIRECTION is either :x, meaning horizontal runs (increasing x) or
   :y which finds vertical runs (increasing y).
 "
-  (labels ((start-position () (make-point :x 0 :y 0))
+  (find-simple-runs image 
+		    (if (eql direction :x) *right* *down*)
+		    (lambda (pos image)
+		      (find (char-at-point image pos) char-set))
+		    'run))
 
-	   (char-at-position-matches-set (position)
-	     (find (char-at-point image position) char-set)))
 
-
-    (loop 
-       :with result = nil
-       :with dir = (make-point :x (if (eql direction :x) 1 0)
-			       :y (if (eql direction :y) 1 0))
-       :with position = (start-position)
-       :while (not (past-end-of-image image position))
-       :finally (return result)
-       :do
-       (if (char-at-position-matches-set position)
-	   (push (make-instance 'run 
-				:a position
-				:b (loop 
-				      :with prev-pos = position
-				      :while (and (not (past-end-of-row/line image position))
-						  (char-at-position-matches-set position))
-				      :finally (return prev-pos) 
-				      :do
-				      (setf prev-pos position)
-				      (setf position (add-points position dir )))
-				:image image)
-		 result)
-	   (setf position (add-points position dir)))
-       (when (past-end-of-row/line image position)
-	 (setf position (adjust-point position (image-size image)))))))
 
 
 (defun find-horizontal-and-vertical-runs (image)
@@ -157,5 +135,3 @@ vertical or horizontal lines and boxes."
 	       (find-runs image *vertical-run-chars* :y)))
 
 
-#+NIL (defun find-text (image)
-  (find-runs image "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" :x))
