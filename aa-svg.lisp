@@ -53,16 +53,6 @@ But for now just hardcode them."
 				 :marker-height 10)
     (cl-svg:draw* (:path :d "M 0 5 L 10 0 L 10 10 z"))))
 
-(defun write-svg-test (image runs &optional (file-name "D:/Weeks/02/test.svg"))
-  (declare (ignore image))
-  (with-standard-io-syntax
-    (cl-svg:with-svg-to-file
-	(scene 'cl-svg:svg-1.1-toplevel :height "600" :width "600" :viewbox "0 0 600 600")
-	(file-name :if-exists :supersede :if-does-not-exist :create)
-      (write-svg-defs scene runs)
-      (loop :for run :in runs 
-	 :do
-	 (write-svg scene run)))))
 
 
 (defun write-svg-test-2 (image elements &optional (file-name "/tmp/test-2.svg"))
