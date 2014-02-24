@@ -4,6 +4,18 @@
   "Point in ASCII coordinate space"
   x y)
 
+
+(defparameter *up* (make-point :x 0 :y -1))
+(defparameter *down* (make-point :x 0 :y 1))
+(defparameter *left* (make-point :x -1 :y 0))
+(defparameter *right* (make-point :x 1 :y 0))
+(defparameter *up-right* (make-point :x 1 :y -1))
+(defparameter *down-right* (make-point :x 1 :y 1))
+(defparameter *down-left* (make-point :x -1 :y 1))
+(defparameter *up-left* (make-point :x -1 :y -1))
+
+(defparameter *here* (make-point :x 0 :y 0))
+
 (defun any->= (a b)
   "Return true if a coordinate of A is less or equal than the corresponding coordinate of B."
   (or (>= (point-x a) (point-x b))
