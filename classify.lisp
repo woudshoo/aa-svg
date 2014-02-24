@@ -145,7 +145,11 @@
        (push class (classes-at-point image point))
        (setf changed t))))
 
+(defmethod remove-classification ((image image) (point point))
+  (setf (classes-at-point image point) nil))
 
+(defmethod remove-classification ((image image) (run run))
+  )
 
 
 (defun classify-image (image)

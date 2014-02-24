@@ -26,7 +26,7 @@
   (make-point :x (+ (point-x a) (point-x b))
 	      :y (+ (point-y a) (point-y b))))
 
-(defun adjust-point (point bounds)
+(defun adjust-point (point bounds &optional (origin *here*))
   "Return POINT if inside BOUNDS, otherwise return adjusted POINT.
 Adjusted means that the point is wrapped around.  This means that if
 the x-coordinate is too large, the y-coordinate is increased and x is set to zero.
@@ -39,13 +39,20 @@ If both coordinates are too large, they are both increased."
 	(when (>= x (point-x bounds))
 	  (incf y)
 	  (unless (>= y (point-y bounds))
-	    (setf x 0)))
+	    (setf x (point-x origin))))
 	(when (>= y (point-y bounds))
 	  (incf x)
 	  (unless (>= x (point-x bounds))
-	    (setf y 0)))
+	    (setf y (point-y origin))))
 	(make-point :x x :y y))
       point))
+
+(defun do-rectangle (function origin end &optional (direction *right*))
+  "Call FUNCTION for each point in rectangle indicated by ORIGIN and END.
+The "
+  (do ((point origin (adjust-point (add-points point direction) end origin)))
+      ((any->= point end))
+    (funcall function point)))
 
 ;;;;;;;;;;;; FSET integration ;;;;;;;;;;;;
 (fset:define-cross-type-compare-methods point)

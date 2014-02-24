@@ -31,6 +31,9 @@ Note:  That the coordinates of a run are inclusive, e.g.
   (format stream "~&~S ~A --> ~A~%"
 	  run (point-a run) (point-b run)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 ;;;;;;;;;;;; FSET integration ;;;;;;;;;;;;
 (fset:define-cross-type-compare-methods run)
 
