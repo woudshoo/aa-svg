@@ -1,19 +1,18 @@
 ;;;; aa-svg.asd
 
 (asdf:defsystem #:aa-svg
-  :serial t
-  :description "Describe aa-svg here"
-  :author "Your Name <your.name@example.com>"
-  :license "Specify license here"
+  :description "Simple converter from ASCII diagrams to SVG"
+  :author "Wim Oudshoorn <woudshoo@xs4all.nl>"
+  :license "LGPL"
   :depends-on (#:cl-svg #:alexandria #:fset)
   :components ((:file "package")
-               (:file "aa-svg")
+               (:file "aa-svg" :depends-on ("image" "classify" "elements"))
 	       (:file "point")
-	       (:file "image")
-	       (:file "rectangle")
-	       (:file "classify")
-	       (:file "lines")
-	       (:file "runs")
-	       (:file "text")
-	       (:file "elements")))
+	       (:file "image" :depends-on ("point"))
+	       (:file "runs" :depends-on ("point" "image"))
+	       (:file "classify" :depends-on ("point" "runs"))
+	       (:file "rectangle" :depends-on ("point"))
+	       (:file "lines" :depends-on ("classify" "image" "point" "runs"))
+	       (:file "text" :depends-on ("runs" "point" "classify"))
+	       (:file "elements" :depends-on ("lines" "text"))))
 
