@@ -6,5 +6,6 @@
    :make-image-from-file
    :print-image
    :print-classification
-   :classify-image))
+   :classify-image
+   :test-file))
 

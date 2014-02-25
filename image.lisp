@@ -43,9 +43,10 @@ character it is, a horizontal line, vertical line, a corner etc."))
 
 (defmethod past-end-of-image ((image image) (point point))
   "method returning if the point is really outside the image.
-THis is typically used when iterating over all points in the image."
+This is typically used when iterating over all points in the image."
   (and (>= (point-x point) (image-width image))
        (>= (point-y point) (image-height image))))
+
 ;;;;;;;;;;;; classification ;;;;;;;;;;;;
 (defmethod classes-at-point ((image image) (point point))
   (let ((x (point-x point))
