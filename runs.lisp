@@ -59,18 +59,22 @@ Note:  That the coordinates of a run are inclusive, e.g.
 		    :stroke "red")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod do-points ((run run) (function function) &optional (direction *right*))
+  (do-rectangle-inclusive function (point-a run) (point-b run) direction))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defmethod text ((run run))
   "Returns the text content of RUN in IMAGE.
 Basically all characters in the original image which are contained in the
 interval specified by RUN. 
 
 NOTE: Currently this only works for horizontal runs."
-  (coerce  (loop
-	      :with image = (image run)
-	      :with y = (point-y (point-a run))
-	      :for x :from (point-x (point-a run)) :to (point-x (point-b run))
-	      :collect (char-at-point image (make-point :x x :y y)))
-	   'string))
+  (let ((text (list)))
+    (do-points run 
+      (lambda (point) 
+	(push (char-at-point (image run) point) text)))
+    (coerce (nreverse text) 'string)))
 
 ;;;;;;;;;;;;
 
@@ -92,20 +96,19 @@ TODO: Simplify"
 					:b prev-point
 					:image image) result)
 		   (setf start-point nil))))
-      (loop 
-	 :for point = *here* :then  (adjust-point (add-points point direction) 
-						  (image-size image))
 
-	 :while (not (past-end-of-image image point))
-	 :finally (make-when-needed)
-	 :for has-right-class = (funcall classifier point image)
-	 :do
-	 (if has-right-class
-	     (unless start-point
-	       (setf start-point point))
-	     (make-when-needed))
-	 (setf prev-point (and (not (past-end-of-row/line image point)) point))))
+      (do-rectangle (lambda (point)
+		      (if (funcall classifier point image)
+			  (unless start-point
+			    (setf start-point point))
+			  (make-when-needed))
+		      (setf prev-point (and (not (past-end-of-row/line image point)) point)))
+	*here*
+	(image-size image)
+	direction)
+      (make-when-needed))
     result))
+
 
 (defun find-runs (image char-set direction)
   "Return all runs in IMAGE consisting of characters in CHAR-SET.

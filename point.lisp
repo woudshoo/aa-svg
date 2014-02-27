@@ -15,6 +15,7 @@
 (defparameter *up-left* (make-point :x -1 :y -1))
 
 (defparameter *here* (make-point :x 0 :y 0))
+(defparameter *origin* *here*)
 
 (defun any->= (a b)
   "Return true if a coordinate of A is less or equal than the corresponding coordinate of B."
@@ -49,10 +50,22 @@ If both coordinates are too large, they are both increased."
 
 (defun do-rectangle (function origin end &optional (direction *right*))
   "Call FUNCTION for each point in rectangle indicated by ORIGIN and END.
-The "
+The points iterated over are all points for which the x, and y coordinates
+satisfy ORIGIN-X <= x < END-X and ORIGIN-Y <= y < END-Y.
+
+The DIRECTION parameter can be either *DOWN* or *RIGHT*, and this indicates the primary
+direction iterated over.  That is, if the DIRECTION is *RIGHT* it will first increase X,
+if the DIRECTION is *DOWN* it will first increment Y."
   (do ((point origin (adjust-point (add-points point direction) end origin)))
       ((any->= point end))
     (funcall function point)))
+
+(defun do-rectangle-inclusive (function origin end &optional (direction *right*))
+  "Same as the `do-rectangle' function except that the end coordinate
+is also included in the iteration.  That is all points (x,y) with
+ORIGIN-X <= x <= END-X and ORIGIN-Y <= y <= END-Y
+are iterated over"
+  (do-rectangle function origin (add-points end (make-point :x 1 :y 1)) direction))
 
 ;;;;;;;;;;;; FSET integration ;;;;;;;;;;;;
 (fset:define-cross-type-compare-methods point)

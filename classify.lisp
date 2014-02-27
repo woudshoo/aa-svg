@@ -22,27 +22,34 @@
 ;;  all are equivalent to:
 ;;
 ;;
-;;      6    3  7
-;;       \  | /          
-;;        \ |/
-;;     2--  * -- 0
-;;         /|\
-;;        / | \ 
-;;       5   1  4
+;;      6  3  7
+;;       \ | /          
+;;        \|/
+;;    2 -- * -- 0
+;;        /|\
+;;       / | \ 
+;;      5  1  4
 ;;
 ;;
+;;                                                  | 
+;;  a combination of these directions:  (0 1 3)  --> ?-
 ;;                                                  |
-;;  a combination of thes directions:  (0 1 3)  --> ?-
-;;                                                  |
-;;
-;;
-;;
+;;  
+
 
 
 (defparameter *current-pos* nil)
 (defparameter *current-image* nil)
 
 (defun one-of (charset &optional (delta *here*))
+  "Checks if the character at the current position is part of CHARSET.
+The optional argument DELTA can be used to check a position relative of the
+current position.
+
+CHARSET is a sequence of characters.
+
+The current position is the position stored in the special variable *current-pos*.
+This position refers to a location in the image *current-image*."
   (find (char-at-point *current-image* (add-points *current-pos* delta)) charset))
 
 (defun is-alphanumeric (&optional (delta *here*))
@@ -149,7 +156,7 @@ Note that this character should also have classification
 		 (not (one-of *vertical-run-chars* *down*))))
 
 	(classifier #\{ 
-	    ""
+	    "A 'T' in the drawing, but oriented like ┤."
 	    (and (one-of *break-point-chars*)
 		 (one-of *vertical-run-chars* *up*)
 		 (one-of *horizontal-run-chars* *left*)
@@ -157,7 +164,7 @@ Note that this character should also have classification
 		 (one-of *vertical-run-chars* *down*)))
 
 	(classifier #\}
-	    ""
+	    "A 'T' in the drawing but oriented like ├."
 	  (and (one-of *break-point-chars*)
 	       (one-of *vertical-run-chars* *up*)
 	       (not (one-of *horizontal-run-chars* *left*))
@@ -165,7 +172,7 @@ Note that this character should also have classification
 	       (one-of *vertical-run-chars* *down*)))
 
 	(classifier #\^
-	    ""
+	    "A 'T' in the drawing but oriented like ┴"
 	  (and (one-of *break-point-chars*)
 	       (one-of *vertical-run-chars* *up*)
 	       (one-of *horizontal-run-chars* *left*)
@@ -173,15 +180,15 @@ Note that this character should also have classification
 	       (not (one-of *vertical-run-chars* *down*))))
 	
 	(classifier #\v
-	    ""
+	    "A 'T' in the drawing, like ┬"
 	  (and (one-of *break-point-chars*)
 	       (not (one-of *vertical-run-chars* *up*))
 	       (one-of *horizontal-run-chars* *left*)
 	       (one-of *horizontal-run-chars* *right*)
 	       (one-of *vertical-run-chars* *down*)))
 	
-	(classifier #\> "" (one-of *arrow-heads-end*))
-	(classifier #\< "" (one-of *arrow-heads-start*))))
+	(classifier #\> "An arrow head" (one-of *arrow-heads-end*))
+	(classifier #\< "An arrow head" (one-of *arrow-heads-start*))))
 
 (defmethod classify ((image image) (point point))
   (loop 
@@ -198,13 +205,22 @@ Note that this character should also have classification
   (setf (classes-at-point image point) nil))
 
 (defmethod remove-classification ((image image) (run run))
-  )
+  (do-points run (lambda (point) (remove-classification image point))))
 
+(defmethod remove-class ((image image) (point point) class)
+  (removef (classes-at-point image point) class))
+
+(defmethod remove-class ((image image) (run run) class)
+  (do-points run (lambda (point) (remove-class image point class))))
 
 (defun classify-image (image)
   "Update the classification data in IMAGE."
-  (loop :for x :from 1 :below (- (image-width image) 1) :do
-     (loop :for y :from 1 :below (- (image-height image) 1)
-	:do
-	(classify image (make-point :x x :y y)))))       
+  (do-rectangle
+      (lambda (point) (classify image point))
+    ;; note the coordinates.
+    ;; We do not want to iterate over the points on the boundary
+    ;; because classify cannot handle this.
+    (make-point :x 1 :y 1)
+    (add-points (image-size image) (make-point :x -1 :y -1))))       
   
+
