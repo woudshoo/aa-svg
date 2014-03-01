@@ -32,19 +32,3 @@
 				:marker-start (if (marker-start element) "url(#TRIANGLE-IN)" "") 
 				:marker-end  (if (marker-end element) "url(#TRIANGLE-OUT)" ""))))))
 
-;;;
-;;; Arrow heads:
-;;;
-;;;  Defining the arrow head is in the defs section:
-;;;  
-;;; <defs>
-;;;  <marker id="Triangle"
-;;;	  viewBox="0 0 10 10" refX="0" refY="5" markerUnits="strokeWidth" markerWidth="8" markerHeight="10" orient="auto">
-;;;    <path d="M 0 0 L 10 5 L 0 10 z" />
-;;; </marker> </defs>
-;;;
-;;; Using the arrow head is done by the attribute marker-... e.g.:
-;;; 
-;;;   <line x1="20" y1="15" x2="20" y2="90" stroke="green" marker-end="url(#Triangle)"/>
-
-
